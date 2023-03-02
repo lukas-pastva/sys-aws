@@ -1,0 +1,16 @@
+Resources:
+  MyKafkaCluster:
+    Type: AWS::MSK::Cluster
+    Properties:
+      BrokerNodeGroupInfo:
+        InstanceType: kafka.m5.large
+        NumberOfBrokerNodes: 1
+      KafkaVersion: "2.2.1"
+      ClusterName: my-kafka-cluster
+      EnhancedMonitoring: PER_TOPIC_PER_BROKER
+
+  MyKafkaTopic:
+    Type: AWS::MSK::Topic
+    Properties:
+      ClusterArn: !Ref MyKafkaCluster
+      TopicName: my-kafka-topic

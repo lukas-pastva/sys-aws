@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+
+  rEC2TestSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: AllowEC2Traffic
+      VpcId: vpc-090a2f73bb7bb6883
+      GroupDescription: Enable SSH access and HTTP access on the inbound port
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: AllowEC2Traffic
+
+  rEC2Test:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-06c39ed6b42908a36
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: "0"
+          SubnetId: subnet-01650d3a52fa523bd
+          GroupSet:
+            - Ref: rEC2TestSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: "/dev/xvda"
+          Ebs:
+            VolumeSize: 8
+            VolumeType: gp2
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          echo "Hello, World" > index.html
+          nohup busybox httpd -f -p 8080 &
+
+Outputs:
+  outputInstanceSecurityGroup:
+    Description: A reference to the created security group
+    Value: !Ref rEC2TestSecurityGroup
+  outputUbuntuInstance:
+    Description: A reference to the created EC2 Instance
+    Value: !Ref rEC2Test

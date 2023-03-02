@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            return {
+              statusCode: 200,
+              body: JSON.stringify({ message: 'Hello, World!' }),
+            };
+          };
+      Runtime: nodejs12.x
+      Layers:
+        - arn:aws:lambda:eu-central-1:xxx:layer:Dynatrace_OneAgent_1_257_1_20221202-040731_nodejs:1
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/dynatrace # Use the wrapper from the layer
+          DT_TENANT: xxx
+          DT_CLUSTER_ID: xxx
+          DT_CONNECTION_BASE_URL: https://xxx.live.dynatrace.com
+          DT_CONNECTION_AUTH_TOKEN: xxx
+          DT_OPEN_TELEMETRY_ENABLE_INTEGRATION: true
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
